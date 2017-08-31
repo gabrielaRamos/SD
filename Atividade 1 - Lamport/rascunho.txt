@@ -1,0 +1,34 @@
+#programa sabe seu id e o total de processos na rede
+
+
+fila_aplicacao[]
+
+lista_recebimento; #lista de vetores
+
+thread envia(ack = {0,1}, pid, cont){
+    para c = 1 ; c < total; c++ :
+        dorme X e depois envia a mensagem para p[c]; 
+        # mensagem deve conter(pid,cont)
+}
+
+thread recebe(){
+    ao receber algo: #onde algo é
+        m.ack {0,1}
+        m.pid 
+        m.cont
+        [m.pid_ack] # caso a mensagem seja um ack, é o pid de quem enviou
+        se !ack:        
+            add_fila(m.pid,m.cont);
+            lista_recebimento (m.pid, m.cont) [m.pid] = 1
+            lista_recebimento (m.pid, m.cont)[meu_pid] = 1 
+            envia(1, m.pid, m.cont)
+            cont = max (cont, m.cont);
+        se ack: # ack no formato "1, pid_enviador, cont, eu"
+            fila na posicao( m.pid, m.cont) [m.pid_ack] = 1
+        se ta tudo 1 em lista_recebimento (m.pid, m.cont)
+            fila_aplicacao.insereOrdenado( m.pid, m.cont)         
+}
+
+thread main(){
+    >> pergunta se quer enviar ou mostrar as mensagens
+}
