@@ -35,6 +35,9 @@ def receber():
                print "Erro ao subir uma nova Thread", str(e)
                sys.exit(2)
 
+
+
+
 def menu():
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
