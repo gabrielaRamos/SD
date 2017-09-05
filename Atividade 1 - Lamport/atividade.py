@@ -7,6 +7,33 @@ def enviar():
     print ("enviando")
 def receber():
     print ("recebido")
+    serverPort = 12000 # + pid
+
+    serverSocket = socket(AF_INET,SOCK_STREAM)
+    serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        try:
+            serverSocket.bind(('',serverPort))
+        except:
+            print "Porta ",serverPort, " Ja em uso!"
+            sys.exit(1)
+        serverSocket.listen(1)
+        print ('***Subindo o servidor no ar!***')
+
+
+        while 1:
+            print "Esperando Conexoes..."
+
+            connectionSocket, addr = serverSocket.accept()
+            print "Conexao estabelecida! Maquina: ", addr
+            try:
+               thread.start_new_thread( atender_cliente, (connectionSocket, addr) )
+               while(thread_iniciada==0):
+                   pass
+               print "Thread para esse cliente subida com sucesso!"
+
+            except Exception,e :
+               print "Erro ao subir uma nova Thread", str(e)
+               sys.exit(2)
 
 def menu():
     if( len(sys.argv)!=3):
@@ -28,7 +55,7 @@ def menu():
     elif opcao == '2':
         receber()
     elif opcao == '0':
-        sys.exit()
+        sys.exit(0)
 def main():
     # my code here
     menu()
