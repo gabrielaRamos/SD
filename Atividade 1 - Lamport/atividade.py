@@ -2,7 +2,6 @@
 
 import threading
 import sys
-#import argparse
 
 def enviar():
     print ("enviando")
@@ -10,9 +9,12 @@ def receber():
     print ("recebido")
 
 def menu():
+    if( len(sys.argv)!=3):
+        print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
+        sys.exit(1)
     n_processo = sys.argv[1]
     total_processos = sys.argv[2]
-    
+
     print(n_processo)
     print(total_processos)
     print ("Selecione a opçao")
