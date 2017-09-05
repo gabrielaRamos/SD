@@ -10,6 +10,11 @@ def receber():
     print ("recebido")
 
 def menu():
+    n_processo = sys.argv[1]
+    total_processos = sys.argv[2]
+    
+    print(n_processo)
+    print(total_processos)
     print ("Selecione a opçao")
     print ("1. Enviar mensagem")
     print ("2. Visualizar mensagens recebidas")
