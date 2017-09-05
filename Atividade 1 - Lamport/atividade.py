@@ -8,6 +8,9 @@ def enviar():
 def receber():
     print ("recebido")
 
+
+
+
 def menu():
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
