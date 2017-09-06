@@ -99,7 +99,7 @@ def menu():
     elif opcao == '2':
         print("mateus errou")
     elif opcao == '0':
-        sys.exit(0)
+        os._exit(0)
 def main():
     # my code here
     if( len(sys.argv)!=3):
