@@ -6,6 +6,7 @@ from threading import Thread
 import random
 import socket
 import os
+import time
 
 #globais
 fila_app = list()
@@ -110,6 +111,7 @@ def main():
     total_processos = int(sys.argv[2])
     a = Receber(n_processo)
     a.start()
+    time.sleep(1)
     menu()
 
 if __name__ == "__main__":
