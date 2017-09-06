@@ -116,7 +116,7 @@ def main():
     total_processos = int(sys.argv[2])
     a = Receber(n_processo)
     a.start()
-    time.sleep(1)
+    time.sleep(0.05)
     menu()
 
 if __name__ == "__main__":
