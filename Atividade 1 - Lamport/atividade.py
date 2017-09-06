@@ -22,13 +22,14 @@ class Receber(Thread):
 
         def run(self):
             serverPort = 12000 + self.num
-
+            global total_processos
             serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             #serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             try:
                     serverSocket.bind(('',serverPort))
                     serverSocket.listen(1)
-                    print ('***Subindo o servidor no ar!Na porta: ', serverPort, '***')
+                    print ('*** Subindo o Processo de número ', self.num,' no total de ',total_processos,'***')
+                    print('*** No ar através da porta: ', serverPort,' ***' )
 
                     while 1:
                         print ("Esperando Conexoes...")
@@ -85,21 +86,25 @@ class Enviar(Thread):
 def menu():
     global n_processo
     global total_processos
-    print ("Selecione a opçao")
-    print ("1. Enviar mensagem")
-    print ("2. Visualizar mensagens recebidas")
-    print ("0. Sair")
+    while 1:
+        print ("Selecione a opção:")
+        print ("1. Enviar mensagem")
+        print ("2. Visualizar mensagens recebidas")
+        print ("0. Sair")
 
-    opcao = input("Opção: ")
+        opcao = input("Opção: ")
 
-    if opcao == '1':
-        enviar = Enviar(n_processo, 0, cont)
-        enviar.start()
+        if opcao == '1':
+            enviar = Enviar(n_processo, 0, cont)
+            enviar.start()
 
-    elif opcao == '2':
-        print("mateus errou")
-    elif opcao == '0':
-        os._exit(0)
+        elif opcao == '2':
+            print("mateus errou")
+        elif opcao == '0':
+            print("\n\nAdeus amiguinho!\n")
+            os._exit(0)
+        else:
+            print("\n\n\n\n\nOpção Inválida!!!\n")
 def main():
     # my code here
     if( len(sys.argv)!=3):
