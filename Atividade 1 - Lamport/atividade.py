@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import sys
-
+from operator import itemgetter, attrgetter, methodcaller
 from threading import Thread
 import random
 import socket
@@ -15,15 +15,62 @@ cont = 0
 total_processos = 0
 n_processo = 0
 
+class Mensagem():
+    def __init__(self, msg, cont_acks, pid, cont):
+        self.msg = msg;
+        self.acks = cont_acks;
+        self.mid = list(pid,cont);
+
+    def tryAdd():
+        global n_processo
+        if(self.msg == True and self.acks == n_processo):
+            fila_app.apend(self.mid)
+
+class Mensagens():
+    def __init__(self):
+        self.msg = list()
+
+    def insereOrdenado(ack, pid, cont):
+        if not self.msg:
+            print("vazia")
+            self.msg.apend(Mensagem( not ack, ack, pid, cont))
+
+        else:
+            mid = list(pid, cont)
+            flag = 0
+            cont = 0
+
+            while(self.msg):
+                if(self.msg[cont].mid == mid):
+                    flag = True
+                    break
+                cont=+1
+
+            #essa mensagem ja foi adc na lista
+            if(flag == True):
+                self.msg[cont].acks += ack
+                if(self.msg[cont].msg == False and ack == False):
+                    self.msg[cont].msg = True
+                Mensagem.tryAdd()
+            #ainda nao foi adc na lista
+            else:
+                self.msg.apend(Mensagem( not ack, ack, pid, cont))
+                #na ultima posicao
+                self.msg[-1].acks += ack
+                self.msg.sort(key = attgetter('mid'))
+                Mensagem.tryAdd()
+
 class Receber(Thread):
         def __init__ (self, num):
               Thread.__init__(self)
               self.num = num
 
         def run(self):
+
             serverPort = 12000 + self.num
             global total_processos
             serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            mensagens = Mensagens()
             #serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             try:
                     serverSocket.bind(('',serverPort))
@@ -42,10 +89,13 @@ class Receber(Thread):
                             vet = msg.split()
                             if(vet[1] == '1'):
                                 print("Recebi ack")
+                                mensagens.insereOrdenado(vet[1], vet[0], vet[2])
+
                             else:
                                 e = Enviar(vet[0], 1, vet[2])
                                 e.start()
                                 print ("Thread para esse cliente subida com sucesso!", msg)
+                                mensagens.insereOrdenado(vet[1], vet[0], vet[2])
                                 global cont
                                 cont = (max(int(vet[2]), cont) + 1)
 
