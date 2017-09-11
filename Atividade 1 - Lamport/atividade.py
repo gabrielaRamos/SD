@@ -17,7 +17,10 @@ n_processo = 0
 
 class Mensagem():
     def __init__(self, msg, cont_acks, pid, cont):
-        self.msg = msg;
+        if(msg == 0):
+            self.msg = False;
+        else:
+            self.msg = True
         self.acks = int(cont_acks);
         self.mid = list();
         self.mid.append(pid)
@@ -26,16 +29,18 @@ class Mensagem():
     def tryAdd(self):
         global n_processo
         if(self.msg == True and self.acks == n_processo):
-            fila_app.apend(self.mid)
-        print("Subiu.acabamos", self.acks, n_processo, self.msg)
+            fila_app.append(self.mid)
+            print("Subiu.acabamos", self.acks, n_processo, self.msg)
 class Mensagens():
     def __init__(self):
         self.msg = list() #lista de Mensagens.
 
     def insereOrdenado(self, ack, pid, cont):
         if not self.msg: #se o vetor de mensagens é vazio
-            print("vazia")
-            mensagem = Mensagem( not ack, ack, pid, cont)
+            if(ack == 1):
+                mensagem = Mensagem( False, ack, pid, cont)
+            else:
+                mensagem = Mensagem( True, ack, pid, cont)
             self.msg.append(mensagem)
 
         else:
@@ -47,6 +52,7 @@ class Mensagens():
             cnt = 0
             while(self.msg[cnt]):
                 if(self.msg[cnt].mid == mid):
+                    print(self.msg[cnt].msg, ack)
                     flag = True #se mensagem ja é existente
                     break
                 cnt=+1
@@ -54,9 +60,9 @@ class Mensagens():
             #essa mensagem ja foi adc na lista
             if(flag == True):
                 self.msg[cnt].acks += int(ack)
-                if(self.msg[cnt].msg == False and ack == False):
+                if(self.msg[cnt].msg == False and ack == 0):
                     self.msg[cnt].msg = True
-                print("Cnt:",cnt,":",self.msg[cnt].msg)
+
                 self.msg[cnt].tryAdd()
             #ainda nao foi adc na lista
             else:
