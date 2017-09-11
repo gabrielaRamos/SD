@@ -173,13 +173,11 @@ def main():
     # my code here
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
-       # sys.exit(1)
+        sys.exit(1)
     global n_processo
     global total_processos
-   # n_processo = int(sys.argv[1])
-   # total_processos = int(sys.argv[2])
-    n_processo = 1
-    total_processos = 1
+    n_processo = int(sys.argv[1])
+    total_processos = int(sys.argv[2])
     a = Receber(n_processo)
     a.start()
     time.sleep(0.05)
