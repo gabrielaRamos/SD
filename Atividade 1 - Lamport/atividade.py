@@ -86,10 +86,8 @@ class Receber(Thread):
                     print('*** No ar através da porta: ', serverPort,' ***' )
 
                     while 1:
-                        print ("Esperando Conexoes...")
-
                         connectionSocket, addr = serverSocket.accept()
-                        print ("Conexao estabelecida! Maquina: ", addr)
+                        print ("Recebi mensagem da máquina: ", addr)
                         try:
                             msg = connectionSocket.recv(32)
                             msg = msg.decode('utf-8')
@@ -101,7 +99,7 @@ class Receber(Thread):
                             else:
                                 e = Enviar(vet[0], 1, vet[2])
                                 e.start()
-                                print ("Thread para esse cliente subida com sucesso!", msg)
+                                print ("Enviando ack para a mensagem: ", msg)
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
                                 global cont
                                 cont = (max(int(vet[2]), cont) + 1)
@@ -137,7 +135,7 @@ class Enviar(Thread):
                     msg = str(self.pid) + ' ' + str(self.ack) + ' ' + str(self.cont)
                     sock.send(msg.encode())
 
-                    print ("Mensagem", msg, " enviada")
+                    print ("Enviei mensagem: ", msg, " para todo mundo.")
                 except Exception as e:
                     print(e)
 
@@ -145,17 +143,18 @@ def menu():
     global n_processo
     global total_processos
     while 1:
+        print("\n\n")
         print ("Selecione a opção:")
         print ("1. Enviar mensagem")
         print ("2. Visualizar mensagens recebidas")
         print ("0. Sair")
 
         opcao = input("Opção: ")
-
+        print("\n\n")
         if opcao == '1':
             enviar = Enviar(n_processo, 0, cont)
             enviar.start()
-
+            time.sleep(0.05)
         elif opcao == '2':
             print("mateus errou")
         elif opcao == '0':
@@ -167,13 +166,11 @@ def main():
     # my code here
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
-       # sys.exit(1)
+        sys.exit(1)
     global n_processo
     global total_processos
-   # n_processo = int(sys.argv[1])
-   # total_processos = int(sys.argv[2])
-    n_processo = 1
-    total_processos = 1
+    n_processo = int(sys.argv[1])
+    total_processos = int(sys.argv[2])
     a = Receber(n_processo)
     a.start()
     time.sleep(0.05)
