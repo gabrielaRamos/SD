@@ -18,47 +18,54 @@ n_processo = 0
 class Mensagem():
     def __init__(self, msg, cont_acks, pid, cont):
         self.msg = msg;
-        self.acks = cont_acks;
-        self.mid = list(pid,cont);
+        self.acks = int(cont_acks);
+        self.mid = list();
+        self.mid.append(pid)
+        self.mid.append(cont)
 
-    def tryAdd():
+    def tryAdd(self):
         global n_processo
         if(self.msg == True and self.acks == n_processo):
             fila_app.apend(self.mid)
-
+        print("Subiu.acabamos", self.acks, n_processo, self.msg)
 class Mensagens():
     def __init__(self):
-        self.msg = list()
+        self.msg = list() #lista de Mensagens.
 
-    def insereOrdenado(ack, pid, cont):
-        if not self.msg:
+    def insereOrdenado(self, ack, pid, cont):
+        if not self.msg: #se o vetor de mensagens é vazio
             print("vazia")
-            self.msg.apend(Mensagem( not ack, ack, pid, cont))
+            mensagem = Mensagem( not ack, ack, pid, cont)
+            self.msg.append(mensagem)
 
         else:
-            mid = list(pid, cont)
+            mid = list()
+            mid.append(pid)
+            mid.append(cont)
             flag = 0
-            cont = 0
 
-            while(self.msg):
-                if(self.msg[cont].mid == mid):
-                    flag = True
+            cnt = 0
+            while(self.msg[cnt]):
+                if(self.msg[cnt].mid == mid):
+                    flag = True #se mensagem ja é existente
                     break
-                cont=+1
+                cnt=+1
 
             #essa mensagem ja foi adc na lista
             if(flag == True):
-                self.msg[cont].acks += ack
-                if(self.msg[cont].msg == False and ack == False):
-                    self.msg[cont].msg = True
-                Mensagem.tryAdd()
+                self.msg[cnt].acks += int(ack)
+                if(self.msg[cnt].msg == False and ack == False):
+                    self.msg[cnt].msg = True
+                print("Cnt:",cnt,":",self.msg[cnt].msg)
+                self.msg[cnt].tryAdd()
             #ainda nao foi adc na lista
             else:
-                self.msg.apend(Mensagem( not ack, ack, pid, cont))
+                self.msg.append(Mensagem( not ack, ack, pid, cont))
                 #na ultima posicao
-                self.msg[-1].acks += ack
+                self.msg[-1].acks += int(ack)
                 self.msg.sort(key = attgetter('mid'))
-                Mensagem.tryAdd()
+                print("Else:")
+                self.msg[cnt].tryAdd()
 
 class Receber(Thread):
         def __init__ (self, num):
@@ -100,9 +107,10 @@ class Receber(Thread):
                                 cont = (max(int(vet[2]), cont) + 1)
 
 
-                        except:
-                           print ("Erro ao subir uma nova Thread")
-                           sys.exit(2)
+                        except Exception as e :
+                            exec_type, exec_obj, exec_tb = sys.exc_info()
+                            print ("Erro ao subir uma nova Thread", exec_type, exec_tb.tb_lineno, e)
+                            sys.exit(2)
 
             except:
                     print ("ERRO!!!!!!!! Porta ",serverPort, " Ja está em uso! Por acaso abriu o mesmo processo duas vezes?")
@@ -159,11 +167,13 @@ def main():
     # my code here
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
-        sys.exit(1)
+       # sys.exit(1)
     global n_processo
     global total_processos
-    n_processo = int(sys.argv[1])
-    total_processos = int(sys.argv[2])
+   # n_processo = int(sys.argv[1])
+   # total_processos = int(sys.argv[2])
+    n_processo = 1
+    total_processos = 1
     a = Receber(n_processo)
     a.start()
     time.sleep(0.05)
