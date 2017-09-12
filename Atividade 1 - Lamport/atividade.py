@@ -174,16 +174,20 @@ def menu():
         print ("0. Sair")
 
         opcao = input("Opção: ")
-        print("\n\n")
+        print()
         if opcao == '1':
             enviar = Enviar(n_processo, 0, cont) #pid ack cont
             enviar.start()
             time.sleep(0.05)
         elif opcao == '2':
-            print("Tamanho da fila_app: ", len(fila_app))
-            print("Contador\tProcesso")
-            mensagens.imprimeMsg()
-            print()
+            if(len(fila_app)!=0):
+                print("***********************************")
+                print("Tamanho da fila_app: ", len(fila_app),"\n")
+                print("Contador\tProcesso")
+                mensagens.imprimeMsg()
+                print("***********************************")
+            else:
+                print("Fila Vazia\n")
         elif opcao == '0':
             print("\n\nAdeus amiguinho!")
             os._exit(0)
