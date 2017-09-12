@@ -10,7 +10,6 @@ import time
 
 #globais
 fila_app = list()
-fila_rec = list()
 cont = 0
 total_processos = 0
 n_processo = 0
@@ -53,7 +52,7 @@ class Mensagens():
             mid.append(pid)
             flag = 0
             cnt = 0
-            global fila_rec
+            global fila_app
             while(cnt < len(self.msg)):
                 if(self.msg[cnt].mid == mid):
                     flag = True #se mensagem ja é existente
@@ -66,10 +65,8 @@ class Mensagens():
                 if(self.msg[cnt].msg == False and ack == 0):
                     self.msg[cnt].msg = True
 
-                retorno = self.msg[cnt].tryAdd()
+                self.msg[cnt].tryAdd()
 
-                if(retorno == 1):
-                    fila_rec.append(self.msg[cnt])
             #ainda nao foi adc na lista
             else:
                 if(ack == 1):
@@ -80,17 +77,14 @@ class Mensagens():
                 #na ultima posicao
                 self.msg[-1].acks += int(ack)
                 self.msg = sorted(self.msg, key = lambda mensagem: mensagem.mid)
-                retorno = self.msg[cnt].tryAdd()
+                self.msg[cnt].tryAdd()
 
-                if(retorno == 1):
-                    fila_rec.append(self.msg[cnt])
 
     def imprimeMsg(self):
-        global fila_rec
-        fila_rec = sorted(fila_rec, key=attrgetter('mid')) 
+        global fila_app
 
-        for i in range(0,len(fila_rec)):
-            print (fila_rec[i].mid[0] , "\t\t" , fila_rec[i].mid[1])
+        for i in range(0,len(fila_app)):
+            print (fila_app[i][0] , "\t\t" , fila_app[i][1])
 
 
 class Receber(Thread):
