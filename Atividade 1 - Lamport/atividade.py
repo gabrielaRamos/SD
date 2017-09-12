@@ -15,7 +15,6 @@ cont = 0
 total_processos = 0
 n_processo = 0
 
-
 class Mensagem():
     def __init__(self, msg, cont_acks, pid, cont):
         if(msg == 0):
@@ -28,10 +27,12 @@ class Mensagem():
         self.mid.append(pid)
 
     def tryAdd(self):
-        global n_processo
+        global total_processos
         global fila_app
-        if(self.msg == True and self.acks == n_processo):
+
+        if(self.msg == True and self.acks == total_processos):
             fila_app.append(self.mid)
+            return 1
 
 class Mensagens():
     def __init__(self):
@@ -52,9 +53,9 @@ class Mensagens():
             mid.append(pid)
             flag = 0
             cnt = 0
+            global fila_rec
             while(cnt < len(self.msg)):
                 if(self.msg[cnt].mid == mid):
-                    print(self.msg[cnt].msg, ack)
                     flag = True #se mensagem ja é existente
                     break
                 cnt+=1
@@ -65,7 +66,10 @@ class Mensagens():
                 if(self.msg[cnt].msg == False and ack == 0):
                     self.msg[cnt].msg = True
 
-                self.msg[cnt].tryAdd()
+                retorno = self.msg[cnt].tryAdd()
+
+                if(retorno == 1):
+                    fila_rec.append(self.msg[cnt])
             #ainda nao foi adc na lista
             else:
                 if(ack == 1):
@@ -76,12 +80,17 @@ class Mensagens():
                 #na ultima posicao
                 self.msg[-1].acks += int(ack)
                 self.msg = sorted(self.msg, key = lambda mensagem: mensagem.mid)
-                self.msg[cnt].tryAdd()
+                retorno = self.msg[cnt].tryAdd()
+
+                if(retorno == 1):
+                    fila_rec.append(self.msg[cnt])
 
     def imprimeMsg(self):
-        for i in range(0,len(self.msg)):
-            print (self.msg[i].mid[0] , "\t\t" , self.msg[i].mid[1])
+        global fila_rec
+        fila_rec = sorted(fila_rec, key=attrgetter('mid')) 
 
+        for i in range(0,len(fila_rec)):
+            print (fila_rec[i].mid[0] , "\t\t" , fila_rec[i].mid[1])
 
 
 class Receber(Thread):
@@ -94,7 +103,7 @@ class Receber(Thread):
             global total_processos
             global cont
             serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            #serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+
             try:
                     serverSocket.bind(('',serverPort))
                     serverSocket.listen(1)
@@ -120,14 +129,12 @@ class Receber(Thread):
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
                                 cont = (max(int(vet[2]), cont) + 1)
 
-
                         except Exception as e :
                             exec_type, exec_obj, exec_tb = sys.exc_info()
                             print ("Erro!!!", exec_type, exec_tb.tb_lineno,"\n",e)
                             sys.exit(2)
 
             except Exception as e :
-                    # print ("ERRO!!!!!!!! Porta ",serverPort, " Ja está em uso! Por acaso abriu o mesmo processo duas vezes?")
                     print (e)
                     os._exit(1)
 
@@ -145,6 +152,7 @@ class Enviar(Thread):
             global cont
 
             for self.n in range (1, self.total+1):
+
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     server_address = ('localhost', 12000 + self.n)
@@ -152,6 +160,7 @@ class Enviar(Thread):
                     msg = str(self.pid) + ' ' + str(self.ack) + ' ' + str(self.cont)
                     sock.send(msg.encode())
                     if not self.ack:
+
                         print ("Enviei a mensagem: ", msg, " para todo mundo.")
 
                 except Exception as e:
@@ -187,7 +196,6 @@ def menu():
         else:
             print("\n\n\nOpção Inválida!!!\n")
 def main():
-    # my code here
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
         sys.exit(1)
@@ -198,7 +206,7 @@ def main():
     total_processos = int(sys.argv[2])
     a = Receber(n_processo)
     a.start()
-    time.sleep(0.05)
+    time.sleep(0.09)
     menu()
 
 if __name__ == "__main__":
