@@ -112,14 +112,14 @@ class Receber(Thread):
                             msg = msg.decode('utf-8') # "pid ack cont"
                             vet = msg.split() # (pid, ack, cont)
                             if(vet[1] == '1'):
-                                print ("Recebi ack mensagem da mensagem: ", vet[0], "0",vet[2]," , da máquina: ", addr)
+                                print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
 
                             else:
-                                print ("Recebi a mensagem: ", msg ," da máquina: ", addr)
+                                print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
                                 e = Enviar(vet[0], 1, vet[2]) # (pid ack cont)
                                 e.start()
-                                print ("Enviando ack para a mensagem: ", msg)
+                                print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
                                 cont = (max(int(vet[2]), cont) + 1)
 
@@ -155,7 +155,7 @@ class Enviar(Thread):
                     sock.send(msg.encode())
                     if not self.ack:
 
-                        print ("Enviei a mensagem: ", msg, " para todo mundo.")
+                        print ("Enviei a mensagem: ", self.cont ," " ,self.pid , " para todo mundo.")
 
                 except Exception as e:
                     print(e)
