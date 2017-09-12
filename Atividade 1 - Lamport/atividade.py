@@ -67,7 +67,11 @@ class Mensagens():
                 self.msg[cnt].tryAdd()
             #ainda nao foi adc na lista
             else:
-                self.msg.append(Mensagem( not ack, ack, pid, cont))
+                if(ack == 1):
+                    mensagem = Mensagem( False, ack, pid, cont)
+                else:
+                    mensagem = Mensagem( True, ack, pid, cont)
+                self.msg.append(mensagem)
                 #na ultima posicao
                 self.msg[-1].acks += int(ack)
                 #self.msg.sort(key = attgetter('mid'))
