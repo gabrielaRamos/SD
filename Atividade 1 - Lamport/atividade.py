@@ -15,6 +15,7 @@ cont = 0
 total_processos = 0
 n_processo = 0
 
+
 class Mensagem():
     def __init__(self, msg, cont_acks, pid, cont):
         if(msg == 0):
@@ -23,15 +24,15 @@ class Mensagem():
             self.msg = True
         self.acks = int(cont_acks);
         self.mid = list();
-        self.mid.append(pid)
         self.mid.append(cont)
+        self.mid.append(pid)
 
     def tryAdd(self):
         global n_processo
         global fila_app
         if(self.msg == True and self.acks == n_processo):
             fila_app.append(self.mid)
-            print("Subiu.acabamos", self.acks, n_processo, self.msg)
+
 class Mensagens():
     def __init__(self):
         self.msg = list() #lista de Mensagens.
@@ -47,8 +48,8 @@ class Mensagens():
         else: # se o vetor não é vazio, insere o ack/mensagem nele
             #criando o message_id
             mid = list()
-            mid.append(pid)
             mid.append(cont)
+            mid.append(pid)
             flag = 0
             cnt = 0
             while(cnt < len(self.msg)):
@@ -74,11 +75,14 @@ class Mensagens():
                 self.msg.append(mensagem)
                 #na ultima posicao
                 self.msg[-1].acks += int(ack)
-                #self.msg.sort(key = attgetter('mid'))
-                self.msg = sorted(self.msg, key= lambda mensagem: mensagem.mid)
-                #print aqui
-                print("Else:")
+                self.msg = sorted(self.msg, key = lambda mensagem: mensagem.mid)
                 self.msg[cnt].tryAdd()
+
+    def imprimeMsg(self):
+        for i in range(0,len(self.msg)):
+            print (self.msg[i].mid[0] , "\t\t" , self.msg[i].mid[1])
+
+
 
 class Receber(Thread):
         def __init__ (self, num):
@@ -90,7 +94,6 @@ class Receber(Thread):
             global total_processos
             global cont
             serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            mensagens = Mensagens()
             #serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             try:
                     serverSocket.bind(('',serverPort))
@@ -158,6 +161,8 @@ def menu():
     global n_processo
     global total_processos
     global fila_app
+    global mensagens
+    mensagens = Mensagens()
     while 1:
         print("\n\n")
         print ("Selecione a opção:")
@@ -173,6 +178,8 @@ def menu():
             time.sleep(0.05)
         elif opcao == '2':
             print("Tamanho da fila_app: ", len(fila_app))
+            print("Contador\tProcesso")
+            mensagens.imprimeMsg()
             print()
         elif opcao == '0':
             print("\n\nAdeus amiguinho!")
@@ -186,6 +193,7 @@ def main():
         sys.exit(1)
     global n_processo
     global total_processos
+    global mensagens
     n_processo = int(sys.argv[1])
     total_processos = int(sys.argv[2])
     a = Receber(n_processo)
