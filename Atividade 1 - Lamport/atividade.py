@@ -93,17 +93,18 @@ class Receber(Thread):
 
                     while 1:
                         connectionSocket, addr = serverSocket.accept()
-                        print ("Recebi mensagem da máquina: ", addr)
+
                         try:
                             msg = connectionSocket.recv(32)
                             msg = msg.decode('utf-8')
                             vet = msg.split()
                             if(vet[1] == '1'):
-                                print("Recebi ack")
+                                print ("Recebi ack mensagem da mensagem: ", msg ," da máquina: ", addr)
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
 
                             else:
-                                e = Enviar(vet[0], 1, vet[2])
+                                print ("Recebi a mensagem: ", msg ," da máquina: ", addr)
+                                e = Enviar(vet[0], 1, vet[2]) # (pid ack cont)
                                 e.start()
                                 print ("Enviando ack para a mensagem: ", msg)
                                 mensagens.insereOrdenado(vet[1], vet[0], vet[2])
@@ -116,8 +117,9 @@ class Receber(Thread):
                             print ("Erro ao subir uma nova Thread", exec_type, exec_tb.tb_lineno, e)
                             sys.exit(2)
 
-            except:
+            except Exception as e :
                     print ("ERRO!!!!!!!! Porta ",serverPort, " Ja está em uso! Por acaso abriu o mesmo processo duas vezes?")
+                    print (e)
                     # os._exit(1)
 
 
@@ -158,7 +160,7 @@ def menu():
         opcao = input("Opção: ")
         print("\n\n")
         if opcao == '1':
-            enviar = Enviar(n_processo, 0, cont)
+            enviar = Enviar(n_processo, 0, cont) #pid ack cont
             enviar.start()
             time.sleep(0.05)
         elif opcao == '2':
