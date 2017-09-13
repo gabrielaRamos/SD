@@ -77,6 +77,12 @@ class Mensagens():
                 #na ultima posicao
                 self.msg[-1].acks += int(ack)
                 self.msg = sorted(self.msg, key = lambda mensagem: mensagem.mid)
+                cnt = 0
+                while(cnt < len(self.msg)):
+                    if(self.msg[cnt].mid == mid):
+                        break
+                    cnt += 1
+                
                 self.msg[cnt].tryAdd()
 
 
