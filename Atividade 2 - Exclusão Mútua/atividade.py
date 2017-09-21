@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import sys
 from operator import itemgetter, attrgetter, methodcaller
 from threading import Thread, Lock
@@ -21,27 +19,59 @@ lock = Lock()
 class Exclusao(Thread):
     def __init__(self ):
         Thread.__init__(self)
-
+        self.oks = 0
 
     def run(self):
         global lock
         solicitacao = list()
+
         with lock:
             if (len(fila_app) > 0):
                 solicitacao = fila_app.pop(0)
-                if (solicitacao[1] == 1):
-                    if (intencao == 0):
+
+                if ((int)(solicitacao[1]) == 1): # Se alguém pediu o recurso
+
+                    if (intencao == 0): # E o recurso Não me interessa...
                         e = Enviar(solicitacao[0][1], 0, cont, 1) # enviar OK
                         e.start()
-                    else
-                        if((time_intencao < (int)solicitacao[0][0]) or ((time_intencao == (int)solicitacao[0][0]) and n_processo < (int)solicitacao[0][1])):
-                            fila_intencao.append(solicitacao[0][1])
-                        else:
+
+                    else: # Caso contrário, se me interessa o recurso
+                        if((time_intencao < (int)(solicitacao[0][0])) or ((time_intencao == (int)(solicitacao[0][0])) and n_processo < (int)(solicitacao[0][1]))):
+                            fila_intencao.append(solicitacao[0][1]) #ganhei a disputa, adicionei o outro na fila
+                            if(n_processo == (int)(solicitacao[0][1])):
+                                self.oks += 1
+                                if(self.oks == total_processos):
+                                    ticktacker = TickTacker()
+                                    ticktacker.start()
+
+                        else: #Perdi a disputa
                             e = Enviar(solicitacao[0][1], 0, cont, 1) # enviar OK
-                            e.start()
+                            e.start() # e chora
+                else: #Se alguem enviou OK, preciso ver se esse OK é para mim.
+                    if(n_processo == solicitacao[0][1]):
+                        self.oks += 1
+                        if(self.oks == total_processos):
+                            ticktacker = TickTacker()
+                            ticktacker.start()
 
 
-#******************************#
+
+class TickTacker(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.timer = random.randrange(2,5)
+    def run(self):
+        global intencao
+        while(self.timer>0):
+            print("Segurando o recurso! Contagem regressiva: ", end=" ")
+            print( self.timer, end = " ")
+            self.timer = self.timer - 1
+            time.sleep(3)
+        intencao = 0
+        while(len(fila_intencao) > 0):
+            fila_intencao.pop(0)
+            print("tamanho da fila", len(fila_intencao))
+
 class Mensagem():
     def __init__(self, msg, cont_acks, pid, cont, solicitaMsg):
         if(msg == 0):
@@ -59,7 +89,12 @@ class Mensagem():
         global fila_app
 
         if(self.msg == True and self.acks == total_processos):
-            fila_app.append(list(self.mid. self.solicitaMsg))
+            mid_solicitaMsg = list()
+            mid_solicitaMsg.append(self.mid)
+            mid_solicitaMsg.append(self.solicitaMsg)
+            fila_app.append(mid_solicitaMsg)
+            e = Exclusao()
+            e.start()
             return 1
 
 class Mensagens():
@@ -70,6 +105,7 @@ class Mensagens():
         if not self.msg: #se o vetor de mensagens é vazio
             if(ack == 1):
                 mensagem = Mensagem( False, ack, pid, cont, solicitaMsg)
+
             else:
                 mensagem = Mensagem( True, ack, pid, cont, solicitaMsg)
             self.msg.append(mensagem)
@@ -114,14 +150,6 @@ class Mensagens():
 
                 self.msg[cnt].tryAdd()
 
-
-    def imprimeMsg(self):
-        global fila_app
-
-        for i in range(0,len(fila_app)):
-            print (fila_app[i][0] , "\t\t" , fila_app[i][1])
-
-
 class Receber(Thread):
         def __init__ (self, num):
               Thread.__init__(self)
@@ -143,19 +171,20 @@ class Receber(Thread):
                         connectionSocket, addr = serverSocket.accept()
 
                         try:
-                            msg = connectionSocket.recv(32)
+                            msg = connectionSocket.recv(64)
                             msg = msg.decode('utf-8') # "pid ack cont"
                             vet = msg.split() # (pid, ack, cont)
+
                             if(vet[1] == '1'):
                                 # print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
-                                recursos.insereOrdenado(vet[1], vet[0], vet[2], vet[3] )
+                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
 
                             else:
                                 # print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
-                                e = Enviar(vet[0], 1, vet[2]) # (pid ack cont)
+                                e = Enviar(vet[0], 1, vet[2], vet[3]) # (pid ack cont)
                                 e.start()
                                 # print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
-                                recursos.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
+                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
                                 cont = (max(int(vet[2]), cont) + 1)
 
                         except Exception as e :
@@ -187,7 +216,7 @@ class Enviar(Thread):
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     server_address = ('localhost', 12000 + self.n)
                     sock.connect(server_address)
-                    msg = str(self.pid) + ' ' + str(self.ack) + ' ' + str(self.cont) + ' 'str(self.solicitaMsg)
+                    msg = str(self.pid) + ' ' + str(self.ack) + ' ' + str(self.cont) + ' ' + str(self.solicitaMsg)
                     sock.send(msg.encode())
                     if not self.ack:
 
@@ -200,12 +229,12 @@ def menu():
     global n_processo
     global total_processos
     global fila_app
-    global recurso
+    global mensagens
     global intencao
     global cont
     global time_intencao
 
-    recurso = Mensagens()
+    mensagens = Mensagens()
     while 1:
         print("\n\n")
         print ("Selecione a opçao:")
@@ -215,11 +244,11 @@ def menu():
         opcao = input("Opção: ")
         print()
         if opcao == '1':
-
-            enviar = Enviar(n_processo, 0, cont) #pid ack cont
+            intencao = 1
+            enviar = Enviar(n_processo, 0, cont, 1) #pid ack cont
             enviar.start()
             time.sleep(0.05)
-            intencao = 1
+
             time_intencao = cont
         elif opcao == '0':
             print("\n\nAdeus amiguinho!")
@@ -232,7 +261,7 @@ def main():
         sys.exit(1)
     global n_processo
     global total_processos
-    global recursos
+    global mensagens
     n_processo = int(sys.argv[1])
     total_processos = int(sys.argv[2])
     a = Receber(n_processo)
