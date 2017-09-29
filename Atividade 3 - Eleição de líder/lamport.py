@@ -112,31 +112,41 @@ class Receber(Thread):
 
                     while 1:
                         connectionSocket, addr = serverSocket.accept()
-
-                        try:
-                            msg = connectionSocket.recv(32)
-                            msg = msg.decode('utf-8') # "pid ack cont"
-                            vet = msg.split() # (pid, ack, cont)
-                            if(vet[1] == '1'):
-                                print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
-
-                            else:
-                                print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
-                                e = Enviar_interno(vet[0], 1, vet[2], vet[3]) # (pid ack cont)
-                                e.start()
-                                print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
-                                cont = (max(int(vet[2]), cont) + 1)
-
-                        except Exception as e :
-                            exec_type, exec_obj, exec_tb = sys.exc_info()
-                            print ("Erro!!!", exec_type, exec_tb.tb_lineno,"\n",e)
-                            sys.exit(2)
+                        cliente = TratarCliente(connectionSocket, addr)
+                        cliente.start()
 
             except Exception as e :
                     print (e)
                     os._exit(1)
+
+class TratarCliente(Thread):
+        def __init__ (self, connectionSocket, addr):
+              Thread.__init__(self)
+              self.addr = addr
+              self.connection = connectionSocket
+
+        def run(self):
+            try:
+                msg = connectionSocket.recv(32)
+                msg = msg.decode('utf-8') # "pid ack cont"
+                vet = msg.split() # (pid, ack, cont)
+                if(vet[1] == '1'):
+                    print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
+                    mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
+
+                else:
+                    print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
+                    e = Enviar_interno(vet[0], 1, vet[2], vet[3]) # (pid ack cont)
+                    e.start()
+                    print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
+                    mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
+                    cont = (max(int(vet[2]), cont) + 1)
+
+            except Exception as e :
+                exec_type, exec_obj, exec_tb = sys.exc_info()
+                print ("Erro!!!", exec_type, exec_tb.tb_lineno,"\n",e)
+                sys.exit(2)
+
 
 def conf_lamport(n_proc, total_proc):
     global n_processo
