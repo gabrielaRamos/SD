@@ -14,6 +14,13 @@ cont = 0
 total_processos = 0
 n_processo = 0
 
+def Eleicao():
+    global n_processo
+    global total_processos
+
+    for temp in range (n_processo, total_processos+1):
+        lamport.Enviar(temp)
+
 def menu():
     global n_processo
     global total_processos
@@ -45,10 +52,11 @@ def main():
     global mensagens
     n_processo = int(sys.argv[1])
     total_processos = int(sys.argv[2])
+    lamport.conf_lamport(n_processo, total_processos)
     a = lamport.Receber(n_processo)
     a.start()
     time.sleep(0.09)
     menu()
-    lamport.conf_lamport(n_processo, total_processos)
+
 if __name__ == "__main__":
     main()

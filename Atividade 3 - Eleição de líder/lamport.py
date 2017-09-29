@@ -119,14 +119,14 @@ class Receber(Thread):
                             vet = msg.split() # (pid, ack, cont)
                             if(vet[1] == '1'):
                                 print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
+                                #mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
 
                             else:
                                 print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
                                 e = Enviar_interno(vet[0], 1, vet[2], vet[3]) # (pid ack cont)
                                 e.start()
                                 print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
+                                #mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
                                 cont = (max(int(vet[2]), cont) + 1)
 
                         except Exception as e :
