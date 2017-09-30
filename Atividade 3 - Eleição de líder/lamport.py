@@ -147,19 +147,19 @@ class TratarCliente(Thread):
         def __init__ (self, connectionSocket, addr):
               Thread.__init__(self)
               self.addr = addr
-              self.connection = connectionSocket
+              self.connectionSocket = connectionSocket
 
         def run(self):
             try:
-                msg = connectionSocket.recv(32)
+                msg = self.connectionSocket.recv(32)
                 msg = msg.decode('utf-8') # "pid ack cont"
                 vet = msg.split() # (pid, ack, cont)
                 if(vet[1] == '1'):
-                    print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
+                    print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", self.addr)
                     mensagens.insereOrdenado(vet[1], vet[0], vet[2], vet[3])
 
                 else:
-                    print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
+                    print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", self.addr)
                     e = Enviar_interno(vet[0], 1, vet[2], vet[3]) # (pid ack cont)
                     e.start()
                     print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
