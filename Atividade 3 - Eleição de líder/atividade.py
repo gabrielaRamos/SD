@@ -12,9 +12,10 @@ import time
 fila_app = list()
 total_processos = 0
 n_processo = 0
-lider= False
+lider= -1
 lock = Lock()
 ganhei = True
+lider_alive = False
 
 class Handler(Thread):
     def __init__(self):
@@ -24,6 +25,7 @@ class Handler(Thread):
         global lock
         global fila_app
         global lider
+        global lider_alive
         global n_processo
         global ganhei
 
@@ -31,23 +33,25 @@ class Handler(Thread):
             lock.acquire()
             if(len(fila_app)) > 0:
                 conteudo = fila_app.pop(0)
-                print(conteudo)
+                # print(conteudo)
                 if(conteudo[1] == 'e'):
                     if (int(conteudo[0]) > n_processo):
                         lider = conteudo[0]
+                        lider_alive = True
                     else:
                         enviar = Enviar(conteudo[0], 'o')
                         enviar.start()
+                        print("O processo ",conteudo[0], " menor do que eu, ta querendo roubar meu lugar...")
                 else:
                     ganhei = False
-                    print("Ganheium ok")
+                    lider = conteudo[0]
             lock.release()
             time.sleep(1)
 
 class Receber(Thread):
         def __init__ (self, num):
               Thread.__init__(self)
-              self.num = num
+              self.num = int(num)
 
         def run(self):
             serverPort = 12000 + self.num
@@ -98,7 +102,7 @@ class TratarCliente(Thread):
 class Enviar(Thread):
         def __init__ (self, pid, mensagem):
               Thread.__init__(self)
-              self.pid = pid
+              self.pid = int(pid)
               self.mensagem = mensagem
         def run(self):
                 global n_processo
@@ -118,17 +122,18 @@ def Eleicao():
     global total_processos
     global ganhei
     global lock
-
-    for destinatario in range (n_processo+1, total_processos+1):
+    global lider
+    global lider_alive
+    for destinatario in range (int(n_processo)+1, int(total_processos)+1):
         enviar = Enviar(destinatario, "e")
         enviar.start()
 
     time.sleep(random.randrange(3,5))
     lock.acquire()
     if (ganhei == True):
-        print("vamos ACABAR logo")
+        print("Sou líder no momento!")
     else:
-        print("nao ganhei a eleicao")
+        print("Tentei realizar o processo de eleição, mas perdi! Líder do momento = ", lider)
         ganhei = True
     lock.release()
 
@@ -155,6 +160,7 @@ def menu():
         else:
             print("\n\n\nOpção Inválida!!!\n")
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
         sys.exit(1)
@@ -164,6 +170,8 @@ def main():
     global timeout
     global lock
     global lider
+    global lider_alive
+
     n_processo = int(sys.argv[1])
     total_processos = int(sys.argv[2])
 
@@ -176,15 +184,14 @@ def main():
         timeout = random.randrange(2,5)
         while timeout > 0 :
             lock.acquire()
-            if lider != False:
+            if lider_alive == True:
                 timeout = random.randrange(2,5)
-                lider = False
+                lider_alive = False
             else:
                 timeout = timeout - 1
 
             lock.release()
             time.sleep(1)
-
         Eleicao()
 
     time.sleep(0.09)
