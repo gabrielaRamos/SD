@@ -82,7 +82,7 @@ class Mensagens():
                     if(self.msg[cnt].mid == mid):
                         break
                     cnt += 1
-                
+
                 self.msg[cnt].tryAdd()
 
 
@@ -112,32 +112,42 @@ class Receber(Thread):
 
                     while 1:
                         connectionSocket, addr = serverSocket.accept()
-
-                        try:
-                            msg = connectionSocket.recv(32)
-                            msg = msg.decode('utf-8') # "pid ack cont"
-                            vet = msg.split() # (pid, ack, cont)
-                            if(vet[1] == '1'):
-                                print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", addr)
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2])
-
-                            else:
-                                print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", addr)
-                                e = Enviar(vet[0], 1, vet[2]) # (pid ack cont)
-                                e.start()
-                                print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
-                                mensagens.insereOrdenado(vet[1], vet[0], vet[2])
-                                cont = (max(int(vet[2]), cont) + 1)
-
-                        except Exception as e :
-                            exec_type, exec_obj, exec_tb = sys.exc_info()
-                            print ("Erro!!!", exec_type, exec_tb.tb_lineno,"\n",e)
-                            sys.exit(2)
+                        c = TratarCliente(connectionSocket, addr)
+                        c.start()
 
             except Exception as e :
                     print (e)
                     os._exit(1)
 
+class TratarCliente(Thread):
+    def __init__ (self, connectionSocket, addr):
+          Thread.__init__(self)
+          self.addr = addr
+          self.connectionSocket = connectionSocket
+
+    def run(self):
+            global total_processos
+            global cont
+            try:
+                msg = self.connectionSocket.recv(32)
+                msg = msg.decode('utf-8') # "pid ack cont"
+                vet = msg.split() # (pid, ack, cont)
+                if(vet[1] == '1'):
+                    print ("Recebi ack mensagem da mensagem: ", vet[2], " ",vet[0],"da máquina: ", self.addr)
+                    mensagens.insereOrdenado(vet[1], vet[0], vet[2])
+
+                else:
+                    print ("Recebi a mensagem: ", vet[2] ," ", vet[0] ," da máquina: ", self.addr)
+                    e = Enviar(vet[0], 1, vet[2]) # (pid ack cont)
+                    e.start()
+                    print ("Enviando ack para a mensagem: ", vet[2] ," ", vet[0])
+                    mensagens.insereOrdenado(vet[1], vet[0], vet[2])
+                    cont = (max(int(vet[2]), cont) + 1)
+
+            except Exception as e :
+                exec_type, exec_obj, exec_tb = sys.exc_info()
+                print ("Erro!!!", exec_type, exec_tb.tb_lineno,"\n",e)
+                sys.exit(2)
 
 
 class Enviar(Thread):
@@ -200,6 +210,7 @@ def menu():
         else:
             print("\n\n\nOpção Inválida!!!\n")
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
     if( len(sys.argv)!=3):
         print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
         sys.exit(1)
