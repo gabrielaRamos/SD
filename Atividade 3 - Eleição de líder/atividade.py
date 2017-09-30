@@ -7,6 +7,7 @@ import random
 import socket
 import os
 import time
+import signal
 
 #globais
 fila_app = list()
@@ -33,18 +34,20 @@ class Handler(Thread):
             lock.acquire()
             if(len(fila_app)) > 0:
                 conteudo = fila_app.pop(0)
-                # print(conteudo)
                 if(conteudo[1] == 'e'):
                     if (int(conteudo[0]) > n_processo):
                         lider = conteudo[0]
                         lider_alive = True
+
                     else:
                         enviar = Enviar(conteudo[0], 'o')
                         enviar.start()
-                        print("O processo ",conteudo[0], " menor do que eu, ta querendo roubar meu lugar...")
+                        print("O processo ", conteudo[0], " menor do que eu, ta querendo roubar meu lugar...")
+                elif(conteudo[1] == 'l'):
+                    lider = conteudo[0]
                 else:
                     ganhei = False
-                    lider = conteudo[0]
+
             lock.release()
             time.sleep(1)
 
@@ -114,7 +117,7 @@ class Enviar(Thread):
                     sock.send(msg.encode())
 
                 except Exception as e:
-                    print(e)
+                    print("Nao consegui me comunicar com a maquina:", self.pid)
 
 
 def Eleicao():
@@ -132,6 +135,9 @@ def Eleicao():
     lock.acquire()
     if (ganhei == True):
         print("Sou líder no momento!")
+        for n in range(1, n_processo):
+            enviar = Enviar(n, "l")
+            enviar.start()
     else:
         print("Tentei realizar o processo de eleição, mas perdi! Líder do momento = ", lider)
         ganhei = True
@@ -151,11 +157,13 @@ def menu():
         opcao = input("Opção: ")
         print()
         if opcao == '1':
-            print("MATEUS SEMPRE ERRA")
+            pid = 1200 + int(n_processo)
+
             time.sleep(0.05)
 
         elif opcao == '0':
             print("\n\nAdeus amiguinho!")
+
             os._exit(0)
         else:
             print("\n\n\nOpção Inválida!!!\n")
@@ -193,9 +201,6 @@ def main():
             lock.release()
             time.sleep(1)
         Eleicao()
-
-    time.sleep(0.09)
-    menu()
 
 if __name__ == "__main__":
     main()
