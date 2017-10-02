@@ -6,6 +6,8 @@ import random
 import socket
 import os
 import time
+import colorama
+from colorama import Fore, Style
 
 #globais
 fila_app = list()
@@ -19,6 +21,7 @@ time_intencao = 0
 lock_a = Lock()
 lock_t = Lock()
 lock_i = Lock()
+lock_enviar = Lock()
 lock_cont = Lock()
 lock_oks = Lock()
 oks = 0
@@ -41,7 +44,7 @@ class Exclusao(Thread): # Consome as mensagens recebidas
             time.sleep(0.1)
             with lock_a: # Com a lock da fila_app
                 if (len(fila_app) > 0): # se tenho alguma mensagem na camada de baixo
-                    print("INDO PROCESSAR UMA MENSAGEM")
+                    print(Fore.RED +"INDO PROCESSAR UMA MENSAGEM" + Style.RESET_ALL)
                     u_print = False
                     buffer_temp = fila_app.pop(0) #buffer_temp = list( mid(cont, dest, reme), payload )
                     print("Buffer_temp: ",buffer_temp)
@@ -141,7 +144,7 @@ class Mensagem():
         elif self.payload is False :
             print("Não consegui adicionar a mensagem porque payload é falso")
         elif (self.acks != total_processos):
-            print("Faltam: ", total_processos - self.acks, "Acks para eu subir a mensagem: ",entrega)
+            print("Faltam: ", Fore.RED, total_processos - self.acks, Style.RESET_ALL, "Acks para eu subir a mensagem: ", Fore.YELLOW,entrega,Fore.RESET)
 
 
 class Mensagens():
@@ -226,7 +229,7 @@ class TratarCliente(Thread):
                 msg = self.connection.recv(64)
                 msg = msg.decode('utf-8')
                 vet = msg.split() # (destinatario(talvez_eu), remetente, ack, cont, mensagem )
-                print("Recebi: [para:", vet[0],",de:",vet[1],",ack:",vet[2],",cont:",vet[3],",payload",vet[4],"]")
+                print(Fore.GREEN,"Recebi:",Style.RESET_ALL," [para:", vet[0],",de:",vet[1],",ack:",vet[2],",cont:",vet[3],",payload",vet[4],"]")
                 with lock_i:
                     mensagens.insereOrdenado(vet[0], vet[1], vet[2], vet[3], vet[4])
                 if(vet[2] == '0'): #se recebi mensagem
@@ -245,7 +248,7 @@ class TratarCliente(Thread):
 class Enviar(Thread): #Envia uma mensagem no estilo:  [destinatario, remetente, ack, cont, msg]
         def __init__ (self, destinatario, ack, cont, payload = "0"): #remetente não vem aqui pq não precisa
               Thread.__init__(self)
-              global lock_cont
+              global lock_cont, lock_enviar
               global n_processo
               self.remetente = n_processo
               self.destinatario = destinatario
@@ -255,16 +258,16 @@ class Enviar(Thread): #Envia uma mensagem no estilo:  [destinatario, remetente, 
 
         def run(self):
             global total_processos
-            print("Enviei: [para:",self.destinatario,",de:",self.remetente,",ack:",self.ack,",cont:",self.cont,",payload",self.payload,"]")
+            print(Fore.BLUE,"Enviei:",Style.RESET_ALL," [para:",self.destinatario,",de:",self.remetente,",ack:",self.ack,",cont:",self.cont,",payload",self.payload,"]")
             for self.n in range (1, total_processos + 1):
-
-                try:
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.connect(('localhost', 12000 + int(self.n)))
-                    msg = str(self.destinatario) + ' ' + str(self.remetente) +' ' + str(self.ack) + ' ' + str(self.cont) + ' ' + str(self.payload)
-                    sock.send(msg.encode())
-                except:
-                        print("Falha ao enviar uma mensagem para o processo ", self.destinatario)
+                with lock_enviar:
+                    try:
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock.connect(('localhost', 12000 + int(self.n)))
+                        msg = str(self.destinatario) + ' ' + str(self.remetente) +' ' + str(self.ack) + ' ' + str(self.cont) + ' ' + str(self.payload)
+                        sock.send(msg.encode())
+                    except:
+                            print("Falha ao enviar uma mensagem para o processo ", self.destinatario)
 
 class verifica(Thread):
     def __init__ (self):
@@ -303,9 +306,10 @@ def menu():
         time.sleep(0.5)
         leu = True
         with lock_t:
-            print ("Selecione a opçao:")
-            print ("1. Solicitar recurso")
-            print ("0. Sair")
+            print(Fore.RED +"Selecione a opçao:")
+            print(Fore.YELLOW +"1. Solicitar recurso")
+            print("0. Sair")
+            print(Style.RESET_ALL)
             u_print = True
             leu = False
         if not leu:
