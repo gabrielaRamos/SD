@@ -52,7 +52,7 @@ class Exclusao(Thread): # Consome as mensagens recebidas
                         if ((buffer_temp[1]) == 'q'): # Se alguém pediu o recurso
                             if (intencao == 0): # E o recurso Não me interessa...
                                 with lock_cont:
-                                    e = Enviar(buffer_temp[0][2], 0, cont, 'o') # enviar OK
+                                    e = Enviar(n_processo, buffer_temp[0][2], 0, cont, 'o') # enviar OK
                                 e.start()
                             else: # Caso contrário, se me interessa o recurso
                                 if(int(buffer_temp[0][2]) != n_processo): # se eu recebi uma proposta de alguem que não sou eu.
@@ -73,7 +73,7 @@ class Exclusao(Thread): # Consome as mensagens recebidas
                                     print("Perdi a disputa para o processo: ",buffer_temp[0][2])
                                     u_print = False
                                     with lock_cont:
-                                        e = Enviar(buffer_temp[0][2], 0, cont, 'o') # enviar OK
+                                        e = Enviar(n_processo, buffer_temp[0][2], 0, cont, 'o') # enviar OK
                                         print("Enviando ok para o ganhador...")
                                     e.start() # e chora
 
@@ -115,7 +115,7 @@ class TickTacker(Thread):
         while(len(fila_intencao) > 0): #passar o recurso adiante
             destinatario = fila_intencao.pop(0)
             with lock_cont:
-                e = Enviar(destinatario, 0, cont, 'o')
+                e = Enviar(n_processo, destinatario, 0, cont, 'o')
             e.start()
 
 class Mensagem():
@@ -233,7 +233,7 @@ class TratarCliente(Thread):
                 with lock_i:
                     mensagens.insereOrdenado(vet[0], vet[1], vet[2], vet[3], vet[4])
                 if(vet[2] == '0'): #se recebi mensagem
-                    e = Enviar(vet[1], 1, vet[3]) # (destinatario_que_agora_é_o_remetente ack cont)
+                    e = Enviar(vet[1], vet[1], 1, vet[3]) # (destinatario_que_agora_é_o_remetente ack cont)
                     e.start() #envio ack para essa mensagem
                     with lock_cont:
                         cont = (max(int(vet[2]), cont) + 1) # e faço lamport no contador
@@ -246,11 +246,11 @@ class TratarCliente(Thread):
 
 
 class Enviar(Thread): #Envia uma mensagem no estilo:  [destinatario, remetente, ack, cont, msg]
-        def __init__ (self, destinatario, ack, cont, payload = "0"): #remetente não vem aqui pq não precisa
+        def __init__ (self, remetente, destinatario, ack, cont, payload = "0"): #remetente não vem aqui pq não precisa
               Thread.__init__(self)
               global lock_cont, lock_enviar
               global n_processo
-              self.remetente = n_processo
+              self.remetente = remetente
               self.destinatario = destinatario
               self.ack = ack
               self.cont = cont
@@ -323,7 +323,7 @@ def menu():
             oks = 0;
             with lock_cont:
                 time_intencao = cont
-                enviar = Enviar(0, 0, cont, 'q') #destinatario ack cont   dest 0 é broadcast
+                enviar = Enviar(n_processo,0, 0, cont, 'q') #destinatario ack cont   dest 0 é broadcast
             enviar.start()
             time.sleep(0.05)
 
