@@ -92,7 +92,7 @@ class TickTacker(Thread):
     def run(self):
         global intencao
         global oks
-        global lock_t
+        global lock_t, lock_cont
         global u_print
         with lock_t:
             if(u_print == True):
@@ -111,7 +111,8 @@ class TickTacker(Thread):
         intencao = 0
         while(len(fila_intencao) > 0): #passar o recurso adiante
             destinatario = fila_intencao.pop(0)
-            e = Enviar(destinatario, 0, cont, 'o')
+            with lock_cont:
+                e = Enviar(destinatario, 0, cont, 'o')
             e.start()
 
 class Mensagem():
@@ -129,18 +130,18 @@ class Mensagem():
         global fila_app
         global lock_a
 
+        entrega = list()
+        entrega.append(self.mid)
+        entrega.append(self.payload)
         if(self.payload is not False and self.acks == total_processos):
-            entrega = list()
-            entrega.append(self.mid)
-            entrega.append(self.payload)
             with lock_a:
-                print("Estou adicionando na fila app")
+                print("Estou adicionando na fila app: ", entrega)
                 fila_app.append(entrega)
             return 1
         elif self.payload is False :
             print("Não consegui adicionar a mensagem porque payload é falso")
         elif (self.acks != total_processos):
-            print("Não consegui adicionar a mensagem porque não recebi acks de todo mundo")
+            print("Faltam: ", total_processos - self.acks, "Acks para eu subir a mensagem: ",entrega)
 
 
 class Mensagens():
