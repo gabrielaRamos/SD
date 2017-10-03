@@ -7,7 +7,7 @@ import socket
 import os
 import time
 import colorama
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 
 #globais
 fila_app = list()
@@ -44,19 +44,19 @@ class Exclusao(Thread): # Consome as mensagens recebidas
             time.sleep(0.1)
             with lock_a: # Com a lock da fila_app
                 if (len(fila_app) > 0): # se tenho alguma mensagem na camada de baixo
-                    print(Fore.RED +"INDO PROCESSAR UMA MENSAGEM" + Style.RESET_ALL)
+                    # print(Fore.RED +"INDO PROCESSAR UMA MENSAGEM" + Style.RESET_ALL)
                     u_print = False
                     buffer_temp = fila_app.pop(0) #buffer_temp = list( mid(cont, dest, reme), payload )
-                    print("Buffer_temp: ",buffer_temp)
+
                     if(int(buffer_temp[0][1]) == 0 or int(buffer_temp[0][1]) == n_processo):
                         if ((buffer_temp[1]) == 'q'): # Se alguém pediu o recurso
                             if (intencao == 0): # E o recurso Não me interessa...
                                 with lock_cont:
-                                    e = Enviar(n_processo, buffer_temp[0][2], 0, cont, 'o') # enviar OK
+                                    e = Enviar(buffer_temp[0][2], n_processo, 0, cont, 'o') # enviar OK
                                 e.start()
                             else: # Caso contrário, se me interessa o recurso
-                                if(int(buffer_temp[0][2]) != n_processo): # se eu recebi uma proposta de alguem que não sou eu.
-                                    print("Recebi uma proposta, meu tempo de intenção é:",time_intencao," e o do cara é:",str(buffer_temp[0][0]), "Meu número é: ",n_processo," E o dele..: ",str(buffer_temp[0][2]))
+                                # if(int(buffer_temp[0][2]) != n_processo): # se eu recebi uma proposta de alguem que não sou eu.
+                                    # print("Recebi uma proposta, meu tempo de intenção é:",time_intencao," e o do cara é:",str(buffer_temp[0][0]), "Meu número é: ",n_processo," E o dele..: ",str(buffer_temp[0][2]))
                                 if((time_intencao < int(buffer_temp[0][0])) or (time_intencao == int(buffer_temp[0][0])
                                  and n_processo <= int(buffer_temp[0][2]))): #se eu ganhei a disputa
                                     if(n_processo != int(buffer_temp[0][2])):
@@ -64,7 +64,7 @@ class Exclusao(Thread): # Consome as mensagens recebidas
                                     else: # se eu ganhei a disputa de mim mesmo:
                                         with lock_oks:
                                             oks = oks + 1
-                                            print("Estou somando meu ok", oks)
+
                                             u_print = False
                                             if(oks == total_processos):
                                                 ticktacker = TickTacker()
@@ -73,21 +73,20 @@ class Exclusao(Thread): # Consome as mensagens recebidas
                                     print("Perdi a disputa para o processo: ",buffer_temp[0][2])
                                     u_print = False
                                     with lock_cont:
-                                        e = Enviar(n_processo, buffer_temp[0][2], 0, cont, 'o') # enviar OK
+                                        e = Enviar(buffer_temp[0][2], n_processo, 0, cont, 'o') # enviar OK
                                         print("Enviando ok para o ganhador...")
                                     e.start() # e chora
 
                         elif(buffer_temp[1] == 'o'):
                             if(n_processo == int(buffer_temp[0][1])):
-                                print("Eba recebi um ok de um outro processo para mim!")
+                                # print("Eba recebi um ok de um outro processo para mim!")
                                 with lock_oks:
                                     oks = oks + 1;
-                                    print("oks", oks)
+
                                     if(oks == total_processos):
                                         ticktacker = TickTacker()
                                         ticktacker.start()
-                    else:
-                        print("Ops, a mensagem não era para mim...")
+
 class TickTacker(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -104,7 +103,7 @@ class TickTacker(Thread):
             print("Segurando o recurso! Contagem regressiva: ", end=" ")
             while(self.timer>0): #consumindo recurso
                 sys.stdout.flush()
-                print( self.timer, end = " ")
+                print( Fore.GREEN, self.timer, Style.RESET_ALL, end = " ")
                 self.timer = self.timer - 1
                 time.sleep(1)
             print("",flush=True)
@@ -115,7 +114,7 @@ class TickTacker(Thread):
         while(len(fila_intencao) > 0): #passar o recurso adiante
             destinatario = fila_intencao.pop(0)
             with lock_cont:
-                e = Enviar(n_processo, destinatario, 0, cont, 'o')
+                e = Enviar(destinatario,n_processo, 0, cont, 'o')
             e.start()
 
 class Mensagem():
@@ -138,13 +137,9 @@ class Mensagem():
         entrega.append(self.payload)
         if(self.payload is not False and self.acks == total_processos):
             with lock_a:
-                print("Estou adicionando na fila app: ", entrega)
+                # print("Estou adicionando na fila app: ", entrega)
                 fila_app.append(entrega)
             return 1
-        elif self.payload is False :
-            print("Não consegui adicionar a mensagem porque payload é falso")
-        elif (self.acks != total_processos):
-            print("Faltam: ", Fore.RED, total_processos - self.acks, Style.RESET_ALL, "Acks para eu subir a mensagem: ", Fore.YELLOW,entrega,Fore.RESET)
 
 
 class Mensagens():
@@ -153,23 +148,26 @@ class Mensagens():
 
     def insereOrdenado(self, destinatario, remetente, ack, cont, payload):
         global fila_app, lock_cont, lock_a
-        print("InsereOrdenado: ",destinatario, remetente, ack, cont, payload)
+        # print("InsereOrdenado: ",destinatario, remetente, ack, cont, payload)
         if not self.lista: #se o vetor de mensagens é vazio
             mensagem = Mensagem( destinatario, remetente, ack, cont, payload)
             self.lista.append(mensagem)
-            print("tava vazio, dei append")
+            # print("tava vazio, dei append")
 
         else: # se o vetor não é vazio, insere o ack/mensagem nele
             #criando o message_id
             mid = list()
             mid.append(cont)
-            mid.append(destinatario)
-            mid.append(remetente)
+            if(str(ack) == '0'):
+                mid.append(destinatario)
+                mid.append(remetente)
+            else:
+                mid.append(remetente)
+                mid.append(destinatario)
             achou = False
             for cnt in range (0, len(self.lista)): # Procura entre todas as mensagens
-                if(self.lista[cnt].mid[0] == mid[0] and self.lista[cnt].mid[0]): #se mensagem ja é existente [comparo apenas o cont e o remetente]
+                if(self.lista[cnt].mid == mid): #se mensagem ja é existente [comparo apenas o cont e o remetente]
                     achou = True
-                    print("Não estava mais vazio, adicionei no lugar certo")
                     self.lista[cnt].acks += int(ack)
                     if(int(ack) == 0):
                         self.lista[cnt].payload = payload
@@ -178,7 +176,6 @@ class Mensagens():
 
             #ainda nao foi adc na lista
             if(not achou):
-                print("Não estava vazio, mas adicionei e dei sort")
                 mensagem = Mensagem( destinatario, remetente, ack, cont, payload)
                 self.lista.append(mensagem)
                 self.lista = sorted(self.lista, key = lambda mensagem: mensagem.mid)
@@ -229,11 +226,13 @@ class TratarCliente(Thread):
                 msg = self.connection.recv(64)
                 msg = msg.decode('utf-8')
                 vet = msg.split() # (destinatario(talvez_eu), remetente, ack, cont, mensagem )
-                print(Fore.GREEN,"Recebi:",Style.RESET_ALL," [para:", vet[0],",de:",vet[1],",ack:",vet[2],",cont:",vet[3],",payload",vet[4],"]")
+                # print(Fore.GREEN,"Recebi:",Style.RESET_ALL," [para:", vet[0],",de:",vet[1],",ack:",vet[2],",cont:",vet[3],",payload",vet[4],"]")
                 with lock_i:
+
                     mensagens.insereOrdenado(vet[0], vet[1], vet[2], vet[3], vet[4])
                 if(vet[2] == '0'): #se recebi mensagem
-                    e = Enviar(vet[1], vet[1], 1, vet[3]) # (destinatario_que_agora_é_o_remetente ack cont)
+
+                    e = Enviar(vet[1], vet[0], 1, vet[3])
                     e.start() #envio ack para essa mensagem
                     with lock_cont:
                         cont = (max(int(vet[2]), cont) + 1) # e faço lamport no contador
@@ -246,7 +245,7 @@ class TratarCliente(Thread):
 
 
 class Enviar(Thread): #Envia uma mensagem no estilo:  [destinatario, remetente, ack, cont, msg]
-        def __init__ (self, remetente, destinatario, ack, cont, payload = "0"): #remetente não vem aqui pq não precisa
+        def __init__ (self, destinatario, remetente, ack, cont, payload = "0"): #remetente não vem aqui pq não precisa
               Thread.__init__(self)
               global lock_cont, lock_enviar
               global n_processo
@@ -258,7 +257,7 @@ class Enviar(Thread): #Envia uma mensagem no estilo:  [destinatario, remetente, 
 
         def run(self):
             global total_processos
-            print(Fore.BLUE,"Enviei:",Style.RESET_ALL," [para:",self.destinatario,",de:",self.remetente,",ack:",self.ack,",cont:",self.cont,",payload",self.payload,"]")
+            # print(Fore.BLUE,"Enviei:",Style.RESET_ALL," [para:",self.destinatario,",de:",self.remetente,",ack:",self.ack,",cont:",self.cont,",payload",self.payload,"]")
             for self.n in range (1, total_processos + 1):
                 with lock_enviar:
                     try:
@@ -283,9 +282,10 @@ class verifica(Thread):
                 time.sleep(0.1)
                 timer = timer - 0.1
             if(leu != True and u_print!= True and lock_t.acquire()):
-                print ("\nSelecione a opçao:")
-                print ("1. Solicitar recurso")
-                print ("0. Sair")
+                print(Fore.RED +"Selecione a opçao:")
+                print(Fore.YELLOW +"1. Solicitar recurso")
+                print("0. Sair")
+                print(Style.RESET_ALL)
                 print ("Opção", end = ":", flush=True)
                 u_print = True
                 lock_t.release()
@@ -323,7 +323,7 @@ def menu():
             oks = 0;
             with lock_cont:
                 time_intencao = cont
-                enviar = Enviar(n_processo,0, 0, cont, 'q') #destinatario ack cont   dest 0 é broadcast
+                enviar = Enviar(0, n_processo, 0, cont, 'q') #destinatario ack cont   dest 0 é broadcast
             enviar.start()
             time.sleep(0.05)
 
@@ -335,7 +335,7 @@ def menu():
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     if( len(sys.argv)!=3):
-        print("Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
+        print(Fore.WHITE, Back.RED, "Chamada inválida use: $ python3 atividade.py NUM_PROCESSO TOTAL_PROCESSOS")
         sys.exit(1)
     global n_processo
     global total_processos
