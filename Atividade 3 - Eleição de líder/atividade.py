@@ -42,9 +42,10 @@ class Handler(Thread):
                     else:
                         enviar = Enviar(conteudo[0], 'o')
                         enviar.start()
-                        print("O processo ", conteudo[0], " menor do que eu, ta querendo roubar meu lugar...")
+                        # print("O processo ", conteudo[0], " menor do que eu, ta querendo roubar meu lugar...")
                 elif(conteudo[1] == 'l'):
                     lider = conteudo[0]
+                    print ("Novo lider:", lider)
                 else:
                     ganhei = False
 
@@ -139,7 +140,7 @@ def Eleicao():
             enviar = Enviar(n, "l")
             enviar.start()
     else:
-        print("Tentei realizar o processo de eleição, mas perdi! Líder do momento = ", lider)
+        print("Líder do momento = ", lider)
         ganhei = True
     lock.release()
 
