@@ -21,7 +21,6 @@ public class Client {
       Client client = new Client();
       Registry registry = LocateRegistry.getRegistry(12345);
       client.fileProcessor = (FileProcessor) registry.lookup("SendFile");
-      System.out.println("Welcome");
       
       
       String fileName = "";
@@ -41,7 +40,7 @@ public class Client {
       while ((byteReaded = fileInputStream.read(data)) != -1) {
         client.fileProcessor.sendFile(fileName, data, 0, byteReaded);
       }
-      System.out.println("Send successful");
+      System.out.println("Enviado com sucesso");
       fileInputStream.close();
 
     } catch (RemoteException | NotBoundException e) {
