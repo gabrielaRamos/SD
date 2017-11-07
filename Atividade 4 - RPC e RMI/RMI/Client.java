@@ -36,11 +36,15 @@ public class Client {
       client.fileProcessor.setFileName("novo" + fileName);
       FileInputStream fileInputStream = new FileInputStream(file);
       int byteReaded = 0;
-      byte[] data = new byte[1204];
+      byte[] data = new byte[262144];
+      long tempoInicial = System.currentTimeMillis();
+
       while ((byteReaded = fileInputStream.read(data)) != -1) {
         client.fileProcessor.sendFile(fileName, data, 0, byteReaded);
       }
+	  long tempoFinal = System.currentTimeMillis();
       System.out.println("Enviado com sucesso");
+	  System.out.printf("Tempo para transferencia:" + (float)(tempoFinal - tempoInicial)/100);
       fileInputStream.close();
 
     } catch (RemoteException | NotBoundException e) {
