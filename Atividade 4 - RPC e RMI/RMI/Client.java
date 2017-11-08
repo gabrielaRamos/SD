@@ -15,16 +15,20 @@ import java.rmi.registry.Registry;
 
 public class Client {
   private FileProcessor fileProcessor;
-  
+
   public static void main(String[] args) throws FileNotFoundException, IOException {
-    try {
+
+	System.setProperty("java.rmi.server.hostname","200.9.84.166");
+
+try {
+
       Client client = new Client();
-      Registry registry = LocateRegistry.getRegistry(12345);
+      Registry registry = LocateRegistry.getRegistry("200.9.84.166");
       client.fileProcessor = (FileProcessor) registry.lookup("SendFile");
-      
-      
+
+
       String fileName = "";
-      
+
       fileName = args[0];
 
       File file = new File(fileName);
@@ -32,11 +36,11 @@ public class Client {
         System.out.println("File not found!");
         return;
       }
-      
+
       client.fileProcessor.setFileName("novo" + fileName);
       FileInputStream fileInputStream = new FileInputStream(file);
       int byteReaded = 0;
-      byte[] data = new byte[262144];
+      byte[] data = new byte[1048576];
       long tempoInicial = System.currentTimeMillis();
 
       while ((byteReaded = fileInputStream.read(data)) != -1) {
@@ -52,4 +56,3 @@ public class Client {
     }
   }
 }
-

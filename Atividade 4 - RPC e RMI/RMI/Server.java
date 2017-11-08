@@ -16,12 +16,14 @@ import java.util.logging.Logger;
 
 public class Server {
   public static void main(String[] args) {
+	System.setProperty("java.rmi.server.hostname","200.9.84.166");
+
+       
     try {
     
-   // System.setSecurityManager(new RMISecurityManager());
     SendFile transferFile = new SendFile();
-    LocateRegistry.createRegistry(12345);
-    Registry registry = LocateRegistry.getRegistry(12345);
+    
+    Registry registry = LocateRegistry.getRegistry();
     registry.bind("SendFile", transferFile);
        
     System.out.println("Server is ready...");

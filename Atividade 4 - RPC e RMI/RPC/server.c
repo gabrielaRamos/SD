@@ -11,11 +11,9 @@ int * fileproc_1_svc(files *inFile, struct svc_req *rqstp) {
 		printf("Novo arquivo");
 		strcpy(fileName, inFile->name);
 		strcat(novoArquivo, fileName);
-		openFile = fopen(novoArquivo, "wb+");		
+		openFile = fopen(novoArquivo, "w+");		
 	}
 	if (strcmp(fileName, inFile->name) == 0){
-		printf("\naqui\n");
-		
 		fwrite(inFile->conteudo, 1, inFile->nBytes, openFile);
 		if (inFile->nBytes < MAXLEN) {
 			printf("Arquivo transferido\n");

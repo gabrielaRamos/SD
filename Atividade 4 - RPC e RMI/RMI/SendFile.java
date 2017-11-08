@@ -23,14 +23,16 @@ public class SendFile extends UnicastRemoteObject implements FileProcessor {
 	public SendFile() throws RemoteException {
 		super();
 	}
-		
+
     @Override
 	public boolean sendFile(String fileName, byte[] data, int offset, int length) throws RemoteException {
 		try {
-			file = new FileOutputStream(this.f);
+			this.f.createNewFile();
+			file = new FileOutputStream(this.f, true);
 			file.write(data, 0, length);
-			
 			file.flush();
+			file.close();
+
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -41,5 +43,7 @@ public class SendFile extends UnicastRemoteObject implements FileProcessor {
     @Override
     public void setFileName(String fileName) throws RemoteException {
        this.f = new File(fileName);
+
+
     }
 }
